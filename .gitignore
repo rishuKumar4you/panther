@@ -1,0 +1,10 @@
+*.tar.gz
+*.zip
+*.mha
+
+test/
+test_labels/
+nnUNet_results/
+model/
+*-modified
+
