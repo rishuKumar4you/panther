@@ -1,104 +1,114 @@
-# let's go to korea 
-
 # PANTHER Challenge Segmentation
 
-This repository contains code, experiments, and documentation for the PANTHER Challenge on biomedical image segmentation. The goal is to develop, evaluate, and compare custom segmentation models using the provided dataset in Kaggle notebooks, and to track findings in a structured private repo.
+This repository contains code for the PANTHER Challenge on biomedical image segmentation using nnUNet and PyTorch.
 
-## Table of Contents
+## Prerequisites
 
-* [Overview](#overview)
-* [Dataset](#dataset)
-* [Getting Started](#getting-started)
-* [Project Structure](#project-structure)
-* [Usage](#usage)
-* [Model Implementations](#model-implementations)
-* [Results and Reporting](#results-and-reporting)
-* [Developer Notes](#developer-notes)
-* [Contributing](#contributing)
-* [License](#license)
+- **Docker** (version 20.10 or later)
+- **NVIDIA Docker** (nvidia-docker2) - Required for GPU support
+- **NVIDIA GPU** with CUDA support (optional but recommended)
 
----
+### Installing Docker
 
-## Overview
+```bash
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
 
-The PANTHER Challenge focuses on segmentation of 3D biomedical volumes. This repo organizes:
+# Install NVIDIA Docker (for GPU support)
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
+curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+sudo apt-get update && sudo apt-get install -y nvidia-docker2
+sudo systemctl restart docker
+```
 
-* Data ingestion from Kaggle notebooks
-* Custom model development and training
-* Result logging and analysis
-* Developer notes for each implementation
-
-## Dataset
-
-The challenge dataset is hosted on Kaggle. Use the `kaggle` CLI or Kaggle API to download and mount the data within your notebook:
-
-kaggle link: [To be updated] 
-
-
-
-## Getting Started
+## Environment Setup
 
 1. **Clone the repository**
 
    ```bash
+   git clone git@github.com:rishuKumar4you/panther.git
+   cd panther
    ```
 
-git clone [git@github.com](mailto:git@github.com):rishuKumar4you/panther.git
-cd panther
+2. **Verify Docker installation**
 
+   ```bash
+   docker --version
+   docker run --rm --gpus all nvidia/cuda:11.8.0-base-ubuntu22.04 nvidia-smi
+   ```
 
-**`requirements.txt`** should include:
+## Building the Docker Container
 
+Build the Docker image using the provided script:
+
+```bash
+./do_build.sh
 ```
-torch
-numpy
-scikit-learn
-scikit-image
-matplotlib
-SimpleITK
-pytest
+
+Or specify a custom tag:
+
+```bash
+./do_build.sh my-custom-tag
 ```
+
+The default image tag is `panther-task2-baseline`.
+
+## Running the Docker Container
+
+### Test Run
+
+Run the container with test data using the provided script:
+
+```bash
+./do_test_run.sh
+```
+
+This script will:
+- Build the container (if needed)
+- Mount `test/input` as `/input` (read-only)
+- Mount `test/output` as `/output` (writable)
+- Run inference using GPU support
+
+### Manual Run
+
+To run the container manually:
+
+```bash
+docker run --rm \
+    --platform=linux/amd64 \
+    --gpus all \
+    --ipc=host \
+    --volume /path/to/input:/input:ro \
+    --volume /path/to/output:/output \
+    panther-task2-baseline
+```
+
+**Note:** Ensure your input directory contains the required data files in the expected format.
 
 ## Project Structure
 
 ```
-├── data/                  # Raw and processed dataset
-│   └── ...
-├── model_unet/             # Kaggle notebooks for experiments
-│   ├── model_unet.ipynb
-│   ├── results.txt    # your results or csv or any format
-|   ├── requirements.txt       # Python dependencies
-│   └── model_unet_notes.md  # note your implementation 
-├── model_linknet/ ...    # similarly create your own dirs.
-...
+├── Dockerfile              # Docker container definition
+├── requirements.txt        # Python dependencies
+├── inference.py           # Main inference script
+├── data_utils.py          # Data processing utilities
+├── nnUNetTrainer_Xepochs.py  # Custom nnUNet trainer
+├── do_build.sh            # Build Docker image script
+├── do_test_run.sh         # Test run script
+├── do_save.sh             # Save container script
 └── README.md              # This file
 ```
 
-## Model Implementations
+## Saving the Container
 
-Each model has its own notebook and developer notes:
+To save the Docker image for deployment:
 
-* **U-Net**: baseline 3D U-Net implementation (`model_unet.ipynb`)
-* **U-Net++**: nested U-Net architecture (`model_unetpp.ipynb`)
-* **Custom variations**: e.g., Attention U-Net, Residual U-Net
+```bash
+./do_save.sh
+```
 
-## Results and Reporting
-
-* Store quantitative metrics (Dice, IOU) and qualitative plots in results file. 
-
-## Developer Notes
-
-Detailed implementation insights, hyperparameter choices, and troubleshooting logs are maintained in each dir. Name each file as `<model_name>_notes.md`.
-
-## Contributing
-
-This is a private repo for core development. To contribute:
-
-1. Fork the repo
-2. Create a new dir with the name of your architecture.
-3. Add corresponding notes and results in your dir.
-4. Please create your own branch. 
-5. Submit a pull request for review.
+This creates a compressed tar.gz file of the container image.
 
 ## License
-
